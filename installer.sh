@@ -173,8 +173,8 @@ if [ $(whoami) = 'root' ]; then
 					7)
 						# Install symfony-cli
 						echo -e "\n\n${Green}Installing symfony...$Color_Off"
-						wget https://get.symfony.com/cli/installer -O - | bash
-						mv /root/.symfony/bin/symfony /usr/local/bin/symfony
+						curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
+						sudo apt install symfony-cli
 						;;
 					
 					8)
