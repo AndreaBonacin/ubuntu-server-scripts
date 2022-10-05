@@ -33,12 +33,17 @@ if [ $(whoami) = 'root' ]; then
 	# If user exists..
 	if id "$1" &>/dev/null; then
 
+
+
+
+
 		echo ""
-		echo -e "$Green               █████  ██████   █████  ██████   █████ $Color_Off"  
-		echo "              ██   ██ ██   ██ ██   ██ ██   ██ ██   ██" 
-		echo -e "$Yellow              ███████ ██   ██ ███████ ██████  ███████$Color_Off" 
-		echo "              ██   ██ ██   ██ ██   ██ ██      ██   ██" 
-		echo -e "$Cyan              ██   ██ ██████  ██   ██ ██      ██   ██$Color_Off"
+		echo -e "$Green		██╗      █████╗ ███╗   ███╗██████╗ $Color_Off"
+		echo "		██║     ██╔══██╗████╗ ████║██╔══██╗" 
+		echo -e "$Yellow		██║     ███████║██╔████╔██║██████╔╝$Color_Off" 
+		echo "		██║     ██╔══██║██║╚██╔╝██║██╔═══╝ " 
+		echo -e "$Cyan		███████╗██║  ██║██║ ╚═╝ ██║██║ $Color_Off"
+		echo "		╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝" 
 		echo ""
 		echo -e "$PurpleB                                                                       $Color_Off"
 		echo -e "$PurpleB ██ ███    ██ ███████ ████████  █████  ██      ██      ███████ ██████  $Color_Off"  
@@ -138,7 +143,35 @@ if [ $(whoami) = 'root' ]; then
 						2)
 							# Install Postgres
 							echo -e "\n\n${Green}Installing Postgres...$Color_Off"
-							apt install -y postgresql-12 libpq-dev postgresql-client postgresql-client-common
+
+							#todo: change pg_hba.conf and postgresql.conf
+
+							# Create the file repository configuration:
+							# Added [ arch=amd64 ] for Ubuntu 22.04
+							sudo sh -c 'echo "deb [ arch=amd64 ] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+							# Import the repository signing key:
+							wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
+							# Update the package lists:
+							sudo apt-get update
+
+							echo -e "${Yellow}Select Postgres version:$Color_Off"
+
+							while true; do
+								echo -e "Which Postgres version do you wish to install?\n* 1) 12\n* 2) 13\n* 3) 14\n* 4) latest"
+									read -p "	-->" choice
+									case $choice in
+										1 ) pg_version='postgresql-12'; break;;
+										2 ) pg_version='postgresql-13'; break;;
+										3 ) pg_version='postgresql-14'; break;;
+										4 ) pg_version='postgresql'; break;;
+										* ) echo -e "${Red}Please select a correct version...$Color_Off";;
+									esac
+							done
+
+							echo -e "\n\n${Green}Installing ${pg_version}...$Color_Off"
+							apt install -y ${pg_version} libpq-dev postgresql-client postgresql-client-common
 							systemctl enable postgresql
 
 							# Postgres users
@@ -166,7 +199,7 @@ if [ $(whoami) = 'root' ]; then
 
 
 						4)	# Install Certbot
-							apt install certbot python3-certbot-apache
+							apt install certbot python3-certbot-apache -y
 							;;
 
 
