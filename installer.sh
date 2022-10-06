@@ -91,8 +91,7 @@ if [ $(whoami) = 'root' ]; then
 							OUTPUT=$(php -v)
 							apacheversion=${OUTPUT:4:3}
 
-							# Find main user
-							USER=${1}
+
 							
 							# Install PHP
 							echo -e "${Yellow}Select PHP version:$Color_Off"
@@ -129,8 +128,8 @@ if [ $(whoami) = 'root' ]; then
 							chown -R www-data:www-data /var/www/
 							chgrp -R www-data /var/www/
 							chmod -R 775 /var/www/
-							usermod -a -G www-data ${USER}
-							usermod -a -G ${USER} www-data
+							usermod -a -G www-data ${1}
+							usermod -a -G ${1} www-data
 							echo -e "${Green}Permissions have been set $Color_Off"
 							
 							a2enmod rewrite && a2enmod headers
@@ -253,7 +252,7 @@ if [ $(whoami) = 'root' ]; then
 								read -p "-->" yn
 								case $yn in
 									[Yy]* ) systemctl enable --now rsnapshot-hourly.timer;;
-									[Nn]* ) break;;
+									[Nn]* ) ;;
 									* ) echo -e "${Red}Please answer yes or no.$Color_Off"
 								;;
 								esac
@@ -262,7 +261,7 @@ if [ $(whoami) = 'root' ]; then
 								read -p "-->" yn
 								case $yn in
 									[Yy]* ) systemctl enable --now rsnapshot-daily.timer;;
-									[Nn]* ) break;;
+									[Nn]* ) ;;
 									* ) echo -e "${Red}Please answer yes or no.$Color_Off"
 								;;
 								esac
@@ -271,7 +270,7 @@ if [ $(whoami) = 'root' ]; then
 								read -p "-->" yn
 								case $yn in
 									[Yy]* ) systemctl enable --now rsnapshot-weekly.timer;;
-									[Nn]* ) break;;
+									[Nn]* ) ;;
 									* ) echo -e "${Red}Please answer yes or no.$Color_Off"
 								;;
 								esac
@@ -280,7 +279,7 @@ if [ $(whoami) = 'root' ]; then
 								read -p "-->" yn
 								case $yn in
 									[Yy]* ) systemctl enable --now rsnapshot-monthly.timer;;
-									[Nn]* ) break;;
+									[Nn]* ) ;;
 									* ) echo -e "${Red}Please answer yes or no.$Color_Off"
 								;;
 								esac
@@ -301,13 +300,13 @@ if [ $(whoami) = 'root' ]; then
 							wget --user=bonuts91 --password=ciaomammaguardacomemidiverto  https://bonuts91.deimos.usbx.me/files/config.fish
 							mv /etc/fish/config.fish /etc/fish/config.fish.backup
 							mv config.fish /etc/fish/
-							echo 'fish' >> /home/${USER}/.bashrc
+							echo 'fish' >> /home/${1}/.bashrc
 							;;
 
 						11)
 							# Install RabbitMQ
 							echo -e "\n\n${Green}Installing RabbitMQ...$Color_Off"
-							sudo apt-get install curl gnupg apt-transport-https -y
+							apt-get install curl gnupg apt-transport-https -y
 							## Team RabbitMQ's main signing key
 							curl -1sLf "https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA" | sudo gpg --dearmor | sudo tee /usr/share/keyrings/com.rabbitmq.team.gpg > /dev/null
 							## Cloudsmith: modern Erlang repository
@@ -341,6 +340,37 @@ if [ $(whoami) = 'root' ]; then
 							sudo rabbitmq-plugins enable rabbitmq_web_mqtt
 
 							sudo rabbitmq-plugins list
+
+							# User guest-guest seems to work only on localhost
+							echo -e "${Yellow}Do you wish to add \"${1}\" as a RabbitMQ user?$Color_Off"
+								read -p "-->" yn
+								case $yn in
+									[Yy]* ) echo "Enter Password : "
+											read -s mypassword
+											sudo rabbitmqctl add_user ${1} mypassword
+											sudo rabbitmqctl set_user_tags ${1} administrator
+											sudo rabbitmqctl set_permissions -p / ${1} ".*" ".*" ".*";;
+									[Nn]* ) ;;
+									* ) echo -e "${Red}Please answer yes or no.$Color_Off"
+								;;
+								esac
+
+							# Rabbitmqadmin: CLI management
+							echo -e "${Yellow}Do you wish install Rabbitmqadmin ?$Color_Off"
+								read -p "-->" yn
+								case $yn in
+									[Yy]* ) #IPV4=$(hostname -I)
+											#wget http://${IPV4}:15672/cli/rabbitmqadmin
+											wget http://localhost:15672/cli/rabbitmqadmin
+											cp rabbitmqadmin /usr/local/bin/
+											chmod a+rx /usr/local/bin/rabbitmqadmin;;
+									[Nn]* ) ;;
+									* ) echo -e "${Red}Please answer yes or no.$Color_Off"
+								;;
+								esac
+
+
+
 							;;
 
 						12)
@@ -354,7 +384,7 @@ if [ $(whoami) = 'root' ]; then
 
 							sudo service smbd restart
 							sudo ufw allow samba
-							sudo smbpasswd -a ${USER}
+							sudo smbpasswd -a ${1}
 							;;
 
 						13)
